@@ -40,7 +40,7 @@ typedef struct systemEvent {
 DigitalIn alarmTestButton(BUTTON1);
 DigitalIn mq2(PE_12);
 
-DigitalOut LEDS[LED1,LED3,LED2]; //alarmLed,incorrectCodeLed,systemBlockedLed
+DigitalOut LEDS[3] = {LED1,LED3,LED2}; //alarmLed,incorrectCodeLed,systemBlockedLed
 
 
 DigitalInOut sirenPin(PE_10);
@@ -347,7 +347,7 @@ void uartTask()
             
         case 's':
         case 'S':
-            struct tm rtcTime;
+            struct tm rtcTime;      //Construccion objeto RTC
             int strIndex;
                     
             uartUsb.write( "\r\nType four digits for the current year (YYYY): ", 48 );
@@ -356,7 +356,7 @@ void uartTask()
                 uartUsb.write( &str[strIndex] ,1 );
             }
             str[4] = '\0';
-            rtcTime.tm_year = atoi(str) - 1900;
+            rtcTime.tm_year = atoi(str) - 1900;     //Metodo RTC
             uartUsb.write( "\r\n", 2 );
 
             uartUsb.write( "Type two digits for the current month (01-12): ", 47 );
@@ -365,7 +365,7 @@ void uartTask()
                 uartUsb.write( &str[strIndex] ,1 );
             }
             str[2] = '\0';
-            rtcTime.tm_mon  = atoi(str) - 1;
+            rtcTime.tm_mon  = atoi(str) - 1;        //Metodo RTC
             uartUsb.write( "\r\n", 2 );
 
             uartUsb.write( "Type two digits for the current day (01-31): ", 45 );
@@ -374,7 +374,7 @@ void uartTask()
                 uartUsb.write( &str[strIndex] ,1 );
             }
             str[2] = '\0';
-            rtcTime.tm_mday = atoi(str);
+            rtcTime.tm_mday = atoi(str);            //Metodo RTC
             uartUsb.write( "\r\n", 2 );
 
             uartUsb.write( "Type two digits for the current hour (00-23): ", 46 );
@@ -383,7 +383,7 @@ void uartTask()
                 uartUsb.write( &str[strIndex] ,1 );
             }
             str[2] = '\0';
-            rtcTime.tm_hour = atoi(str);
+            rtcTime.tm_hour = atoi(str);            //Metodo RTC
             uartUsb.write( "\r\n", 2 );
 
             uartUsb.write( "Type two digits for the current minutes (00-59): ", 49 );
@@ -392,7 +392,7 @@ void uartTask()
                 uartUsb.write( &str[strIndex] ,1 );
             }
             str[2] = '\0';
-            rtcTime.tm_min  = atoi(str);
+            rtcTime.tm_min  = atoi(str);            //Metodo RTC
             uartUsb.write( "\r\n", 2 );
 
             uartUsb.write( "Type two digits for the current seconds (00-59): ", 49 );
@@ -401,11 +401,11 @@ void uartTask()
                 uartUsb.write( &str[strIndex] ,1 );
             }
             str[2] = '\0';
-            rtcTime.tm_sec  = atoi(str);
+            rtcTime.tm_sec  = atoi(str);            //Metodo RTC
             uartUsb.write( "\r\n", 2 );
 
-            rtcTime.tm_isdst = -1;
-            set_time( mktime( &rtcTime ) );
+            rtcTime.tm_isdst = -1;                  //Metodo RTC
+            set_time( mktime( &rtcTime ) );         
             uartUsb.write( "Date and time has been set\r\n", 28 );
 
             break;
