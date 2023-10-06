@@ -18,6 +18,10 @@
 #define EVENT_MAX_STORAGE                      100
 #define EVENT_NAME_MAX_LENGTH                   14
 
+#define ALARM_LED                                0
+#define INCORRECT_CODE_LED                       1
+#define SYSTEM_BLOCKED_LED                       2
+
 //=====[Declaration of public data types]======================================
 
 typedef enum {
@@ -36,9 +40,8 @@ typedef struct systemEvent {
 DigitalIn alarmTestButton(BUTTON1);
 DigitalIn mq2(PE_12);
 
-DigitalOut alarmLed(LED1);
-DigitalOut incorrectCodeLed(LED3);
-DigitalOut systemBlockedLed(LED2);
+DigitalOut LEDS[LED1,LED3,LED2]; //alarmLed,incorrectCodeLed,systemBlockedLed
+
 
 DigitalInOut sirenPin(PE_10);
 
@@ -120,14 +123,14 @@ char matrixKeypadUpdate();
 
 int main()
 {
-    inputsInit();
-    outputsInit();
-    while (true) {
-        alarmActivationUpdate();
-        alarmDeactivationUpdate();
-        uartTask();
-        eventLogUpdate();
-        delay(TIME_INCREMENT_MS);
+    inputsInit();                   //Inicializacion de las entradas
+    outputsInit();                  //Inicializacion de las salidas
+    while (true) {                  //Bucle principal
+        alarmActivationUpdate();    //Actualizacion de activacion de alarma
+        alarmDeactivationUpdate();  //Actualizacion de desactivacion de alarma
+        uartTask();                 //Enviado de texto por puerto serie
+        eventLogUpdate();           //Actualizacion de log de eventos    
+        delay(TIME_INCREMENT_MS);   //Delay
     }
 }
 
@@ -144,9 +147,9 @@ void inputsInit()
 
 void outputsInit()
 {
-    alarmLed = OFF;
-    incorrectCodeLed = OFF;
-    systemBlockedLed = OFF;
+    LEDS[ALARM_LED] = OFF;
+    LEDS[INCORRECT_CODE_LED] = OFF;
+    LEDS[SYSTEM_BLOCKED_LED] = OFF;
 }
 
 void alarmActivationUpdate()
@@ -194,21 +197,21 @@ void alarmActivationUpdate()
         if( gasDetectorState && overTempDetectorState ) {
             if( accumulatedTimeAlarm >= BLINKING_TIME_GAS_AND_OVER_TEMP_ALARM ) {
                 accumulatedTimeAlarm = 0;
-                alarmLed = !alarmLed;
+                LEDS[ALARM_LED] = !LEDS[ALARM_LED];
             }
         } else if( gasDetectorState ) {
             if( accumulatedTimeAlarm >= BLINKING_TIME_GAS_ALARM ) {
                 accumulatedTimeAlarm = 0;
-                alarmLed = !alarmLed;
+                LEDS[ALARM_LED] = !LEDS[ALARM_LED];
             }
         } else if ( overTempDetectorState ) {
             if( accumulatedTimeAlarm >= BLINKING_TIME_OVER_TEMP_ALARM  ) {
                 accumulatedTimeAlarm = 0;
-                alarmLed = !alarmLed;
+                LEDS[ALARM_LED] = !LEDS[ALARM_LED];
             }
         }
     } else{
-        alarmLed = OFF;
+        LEDS[ALARM_LED] = OFF;
         gasDetectorState = OFF;
         overTempDetectorState = OFF;
         sirenPin.input();                                  
@@ -228,10 +231,10 @@ void alarmDeactivationUpdate()
             }
         }
         if( keyReleased == '#' ) {
-            if( incorrectCodeLed ) {
+            if( LEDS[INCORRECT_CODE_LED] ) {
                 numberOfHashKeyReleasedEvents++;
                 if( numberOfHashKeyReleasedEvents >= 2 ) {
-                    incorrectCodeLed = OFF;
+                    LEDS[INCORRECT_CODE_LED] = OFF;
                     numberOfHashKeyReleasedEvents = 0;
                     matrixKeypadCodeIndex = 0;
                 }
@@ -242,14 +245,14 @@ void alarmDeactivationUpdate()
                         numberOfIncorrectCodes = 0;
                         matrixKeypadCodeIndex = 0;
                     } else {
-                        incorrectCodeLed = ON;
+                        LEDS[INCORRECT_CODE_LED] = ON;
                         numberOfIncorrectCodes++;
                     }
                 }
             }
         }
     } else {
-        systemBlockedLed = ON;
+        LEDS[SYSTEM_BLOCKED_LED] = ON;
     }
 }
 
@@ -304,11 +307,11 @@ void uartTask()
             if ( incorrectCode == false ) {
                 uartUsb.write( "\r\nThe code is correct\r\n\r\n", 25 );
                 alarmState = OFF;
-                incorrectCodeLed = OFF;
+                LEDS[INCORRECT_CODE_LED] = OFF;
                 numberOfIncorrectCodes = 0;
             } else {
                 uartUsb.write( "\r\nThe code is incorrect\r\n\r\n", 27 );
-                incorrectCodeLed = ON;
+                LEDS[INCORRECT_CODE_LED] = ON;
                 numberOfIncorrectCodes++;
             }
             break;
@@ -470,17 +473,17 @@ void eventLogUpdate()
     systemElementStateUpdate( alarmLastState, alarmState, "ALARM" );
     alarmLastState = alarmState;
 
-    systemElementStateUpdate( gasLastState, !mq2, "GAS_DET" );
+    systemElementStateUpdate( gasLastState, !mq2, "GAS_DET" );Temperature: %.2f \xB0 C
     gasLastState = !mq2;
 
     systemElementStateUpdate( tempLastState, overTempDetector, "OVER_TEMP" );
     tempLastState = overTempDetector;
 
-    systemElementStateUpdate( ICLastState, incorrectCodeLed, "LED_IC" );
-    ICLastState = incorrectCodeLed;
+    systemElementStateUpdate( ICLastState, LEDS[INCORRECT_CODE_LED], "LED_IC" );
+    ICLastState = LEDS[INCORRECT_CODE_LED];
 
-    systemElementStateUpdate( SBLastState, systemBlockedLed, "LED_SB" );
-    SBLastState = systemBlockedLed;
+    systemElementStateUpdate( SBLastState, LEDS[SYSTEM_BLOCKED_LED], "LED_SB" );
+    SBLastState = LEDS[SYSTEM_BLOCKED_LED];
 }
 
 void systemElementStateUpdate( bool lastState,
@@ -564,6 +567,7 @@ char matrixKeypadUpdate()
 {
     char keyDetected = '\0';
     char keyReleased = '\0';
+    char str[100];
 
     switch( matrixKeypadState ) {
 
@@ -604,5 +608,8 @@ char matrixKeypadUpdate()
         matrixKeypadInit();
         break;
     }
+    sprintf ( str, "Maquina de estados de teclado: %d \r\n", matrixKeypadState);
+    stringLength = strlen(str);
+    uartUsb.write( str, stringLength );
     return keyReleased;
 }
