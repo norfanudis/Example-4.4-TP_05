@@ -1,3 +1,29 @@
+/**
+ * @file main.c
+ *
+ * @brief Este es el archivo fuente principal para el programa de control del sistema.
+ *
+ * Este programa se encarga de controlar un sistema que incluye una alarma, un detector de gas, monitoreo de temperatura y un teclado matricial.
+ *
+ * @date 14 de septiembre de 2023
+ */
+
+/**
+ * @mainpage Documentación del Programa de Control del Sistema
+ *
+ * @section intro_sec Introducción
+ *
+ * Esta documentación proporciona una descripción general del programa de control del sistema implementado en el archivo main.c.
+ *
+ * @section install_sec Instalación
+ *
+ * Este programa puede ser compilado y ejecutado en una plataforma de hardware adecuada.
+ *
+ * @section usage_sec Uso
+ *
+ * El programa controla varios aspectos del sistema, incluyendo la activación y desactivación de la alarma, la detección de gas, el monitoreo de la temperatura, y la interacción con un teclado matricial.
+ */
+
 //=====[Libraries]=============================================================
 #include <string.h>
 #include "mbed.h"
@@ -24,13 +50,18 @@
 #define SYSTEM_BLOCKED_LED                       2
 
 //=====[Declaration of public data types]======================================
-
+/**
+ * @brief Enumeración de los estados del teclado matricial.
+ */
 typedef enum {
     MATRIX_KEYPAD_SCANNING,
     MATRIX_KEYPAD_DEBOUNCE,
     MATRIX_KEYPAD_KEY_HOLD_PRESSED
 } matrixKeypadState_t;
 
+/**
+ * @brief Estructura para representar un evento del sistema.
+ */
 typedef struct systemEvent {
     time_t seconds;
     char typeOfEvent[EVENT_NAME_MAX_LENGTH];
@@ -97,32 +128,103 @@ systemEvent_t arrayOfStoredEvents[EVENT_MAX_STORAGE];
 
 //=====[Declarations (prototypes) of public functions]=========================
 
+/**
+ * @brief Inicializa las entradas del sistema.
+ */
 void inputsInit();
+
+/**
+ * @brief Inicializa las salidas del sistema.
+ */
 void outputsInit();
 
+/**
+ * @brief Actualiza el estado de activación de la alarma.
+ */
 void alarmActivationUpdate();
+
+/**
+ * @brief Actualiza la lógica de desactivación de la alarma.
+ */
 void alarmDeactivationUpdate();
 
+/**
+ * @brief Tarea para la comunicación UART.
+ */
 void uartTask();
+
+/**
+ * @brief Muestra los comandos disponibles por UART.
+ */
 void availableCommands();
+
+/**
+ * @brief Compara dos secuencias de caracteres.
+ *
+ * @return true si las secuencias son iguales, false en caso contrario.
+ */
 bool areEqual();
 
+/**
+ * @brief Actualiza el registro de eventos del sistema.
+ */
 void eventLogUpdate();
-void systemElementStateUpdate( bool lastState,
-                               bool currentState,
-                               const char* elementName );
 
-float celsiusToFahrenheit( float tempInCelsiusDegrees );
-float analogReadingScaledWithTheLM35Formula( float analogReading );
+/**
+ * @brief Actualiza el estado de un elemento del sistema y registra eventos.
+ *
+ * @param lastState     Estado anterior del elemento.
+ * @param currentState   Estado actual del elemento.
+ * @param elementName   Nombre del elemento.
+ */
+void systemElementStateUpdate(bool lastState, bool currentState, const char* elementName);
+
+/**
+ * @brief Convierte una temperatura en grados Celsius a Fahrenheit.
+ *
+ * @param tempInCelsiusDegrees   Temperatura en grados Celsius.
+ * @return Temperatura en grados Fahrenheit.
+ */
+float celsiusToFahrenheit(float tempInCelsiusDegrees);
+
+/**
+ * @brief Escala una lectura analógica utilizando la fórmula del LM35.
+ *
+ * @param analogReading   Lectura analógica.
+ * @return Temperatura escalada en grados Celsius.
+ */
+float analogReadingScaledWithTheLM35Formula(float analogReading);
+
+/**
+ * @brief Inicializa el arreglo de lecturas del LM35.
+ */
 void lm35ReadingsArrayInit();
 
+/**
+ * @brief Inicializa el teclado matricial para su uso.
+ */
 void matrixKeypadInit();
+
+/**
+ * @brief Escanea el teclado matricial en busca de una tecla presionada.
+ *
+ * @return La tecla detectada o '\0' si no se presionó ninguna tecla.
+ */
 char matrixKeypadScan();
+
+/**
+ * @brief Actualiza el estado del teclado matricial.
+ *
+ * @return La tecla liberada o '\0' si no se liberó ninguna tecla.
+ */
 char matrixKeypadUpdate();
 
-//=====[Main function, the program entry point after power on or reset]========
-
-int main()
+/**
+ * @brief Función principal, el punto de entrada del programa después del encendido o reinicio.
+ *
+ * @return Estado de salida del programa.
+ */
+int main() 
 {
     inputsInit();                   //Inicializacion de las entradas
     outputsInit();                  //Inicializacion de las salidas
