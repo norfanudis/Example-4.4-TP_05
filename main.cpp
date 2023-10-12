@@ -474,7 +474,7 @@ void eventLogUpdate()
     systemElementStateUpdate( alarmLastState, alarmState, "ALARM" );
     alarmLastState = alarmState;
 
-    systemElementStateUpdate( gasLastState, !mq2, "GAS_DET" );Temperature: %.2f \xB0 C
+    systemElementStateUpdate( gasLastState, !mq2, "GAS_DET" );
     gasLastState = !mq2;
 
     systemElementStateUpdate( tempLastState, overTempDetector, "OVER_TEMP" );
@@ -569,6 +569,7 @@ char matrixKeypadUpdate()
     char keyDetected = '\0';
     char keyReleased = '\0';
     char str[100];
+    int stringLength;
 
     switch( matrixKeypadState ) {
 
